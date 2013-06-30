@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: spaceflight dynamics | Science I/O]]></title>
-  <link href="http://slnovak.github.io/blog/categories/spaceflight-dynamics/atom.xml" rel="self"/>
-  <link href="http://slnovak.github.io/"/>
-  <updated>2013-06-30T18:53:12-04:00</updated>
-  <id>http://slnovak.github.io/</id>
+  <link href="http://stefan.novak.io/blog/categories/spaceflight-dynamics/atom.xml" rel="self"/>
+  <link href="http://stefan.novak.io/"/>
+  <updated>2013-06-30T18:58:59-04:00</updated>
+  <id>http://stefan.novak.io/</id>
   <author>
     <name><![CDATA[Stefan Novak]]></name>
     <email><![CDATA[stefan@novak.io]]></email>
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[Using JRuby for Flight Dynamics System Design]]></title>
-    <link href="http://slnovak.github.io/blog/2013/06/30/using-jruby-for-flight-dynamics-system-design/"/>
+    <link href="http://stefan.novak.io/blog/2013/06/30/using-jruby-for-flight-dynamics-system-design/"/>
     <updated>2013-06-30T13:04:00-04:00</updated>
-    <id>http://slnovak.github.io/blog/2013/06/30/using-jruby-for-flight-dynamics-system-design</id>
+    <id>http://stefan.novak.io/blog/2013/06/30/using-jruby-for-flight-dynamics-system-design</id>
     <content type="html"><![CDATA[<p>One of my recent side-project endeavors is to create an open-source library that takes
 advantage of pre-existing open-source technologies to build out a scalable spacecraft simulation
 framework that can be used to support the development of flight dynamics systems. Sure there are

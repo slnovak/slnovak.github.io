@@ -2,20 +2,20 @@
 <urlset xmlns='http://www.sitemaps.org/schemas/sitemap/0.9'>
     <url>
         <loc>
-            http://slnovak.github.io/blog/2013/06/30/using-jruby-for-flight-dynamics-system-design/
+            http://stefan.novak.io/blog/2013/06/30/using-jruby-for-flight-dynamics-system-design/
         </loc>
         <lastmod>2013-06-30T18:53:02-04:00</lastmod>
     </url>
     <url>
-        <loc>http://slnovak.github.io/blog/archives/</loc>
+        <loc>http://stefan.novak.io/blog/archives/</loc>
         <lastmod>2013-06-30T18:53:02-04:00</lastmod>
     </url>
     <url>
-        <loc>http://slnovak.github.io/</loc>
+        <loc>http://stefan.novak.io/</loc>
         <lastmod>2013-06-30T18:53:02-04:00</lastmod>
     </url>
     <url>
-        <loc>http://slnovak.github.io/robots.txt</loc>
+        <loc>http://stefan.novak.io/robots.txt</loc>
         <lastmod>2013-06-30T12:56:49-04:00</lastmod>
     </url>
 </urlset>

@@ -1,4 +1,4 @@
 User-agent: *
 Disallow: 
 
-Sitemap: http://slnovak.github.io/sitemap.xml 
+Sitemap: http://stefan.novak.io/sitemap.xml 
