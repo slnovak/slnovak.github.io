@@ -4,7 +4,7 @@
   <title><![CDATA[Category: spaceflight dynamics | Science I/O]]></title>
   <link href="http://slnovak.github.io/blog/categories/spaceflight-dynamics/atom.xml" rel="self"/>
   <link href="http://slnovak.github.io/"/>
-  <updated>2013-06-30T18:49:53-04:00</updated>
+  <updated>2013-06-30T18:53:12-04:00</updated>
   <id>http://slnovak.github.io/</id>
   <author>
     <name><![CDATA[Stefan Novak]]></name>
@@ -127,7 +127,7 @@ end
 propagation loop for 10 days. However, note that we&rsquo;re not explicitly stepping the system,
 instead we&rsquo;re simply registering events at given times and locations within the orbit that we
 want to step to. By default, events are assumed to be one-time events which can be expressed by
-an increasing <a href="http://commons.apache.org/proper/commons-math/apidocs/org/apache/commons/math3/ode/events/EventHandler.html#g(double,%20double[]">g switching function</a>).
+an increasing <a href="http://commons.apache.org/proper/commons-math/apidocs/org/apache/commons/math3/ode/events/EventHandler.html">g switching function</a>.
 Once this event occurs, the integrator no longer evaluates the corresponding g function, allowing for the
 propagator to continue along efficiently. However, if there is a stepping function that does
 repeat, a user can pass in the <code>:recurring =&gt; true</code> option. Keep in mind that the notation
@@ -196,13 +196,13 @@ end.new(@force_model)
 <p>This is where the core logic of executing the propagation loop exists. When we define the
 propagation loop through the constructor (<code>Propagator.new do ... end</code>), we end up evaluating
 the user-supplied block within the scope of the instance of the new Propagator object. This allows
-us to access any helper/setter methods, such as <code>force\_model</code> and <code>integrator</code>.</p>
+us to access any helper/setter methods, such as <code>force_model</code> and <code>integrator</code>.</p>
 
 <p>Once the user-supplied block is executed, which ultimately stores any configuration data that is needed to run
 the propagation loop, we create an anonymous class that implements the
 <a href="http://commons.apache.org/proper/commons-math/apidocs/org/apache/commons/math3/ode/FirstOrderDifferentialEquations.html">FirstOrderDifferentialEquations</a>
-interface. This is primarily to bind the <code>compute\_derivatives</code> method from the selected force
-model to the integrator. Note that we have to pass <code>Propagator</code>&rsquo;s <code>@force\_model</code> to the ODE
+interface. This is primarily to bind the <code>compute_derivatives</code> method from the selected force
+model to the integrator. Note that we have to pass <code>Propagator</code>&rsquo;s <code>@force_model</code> to the ODE
 anonymous class via the constructor.</p>
 
 <p>Finally, we call the <code>integrate</code> method on our integrator!</p>
@@ -289,7 +289,7 @@ end
 <p>First we define a class that acts as an event handler context. This is used to expose default
 objects in the lambda function that is evaluated as the user-supplied g switching function. You
 can see these objects in action within our example, such as <code>at -&gt;{ time &lt;=&gt; 2.days }...</code>
-(where <code>&lt;=&gt;</code> is the &lsquo;comparable&rsquo; operator). The same is done for <code>event\_occurred\_context</code>,
+(where <code>&lt;=&gt;</code> is the &lsquo;comparable&rsquo; operator). The same is done for <code>event_occurred_context</code>,
 which exposes enum types that can be returned at the end of the user-supplied code block for
 an event to control the execution of the propagator.</p>
 
@@ -338,15 +338,15 @@ end.new(event_handler_context, event_occurred_context, event, &amp;block)
 
 <p>Next we define an event handler, which implements the
 <a href="http://commons.apache.org/proper/commons-math/apidocs/org/apache/commons/math3/ode/events/class-use/EventHandler.html">EventHandler interface</a>.
-Note how the switching function, <code>g(t,y)</code> creates a new instance of the <code>event\_handler\_context</code>
+Note how the switching function, <code>g(t,y)</code> creates a new instance of the <code>event_handler_context</code>
 class, with the time, position, and velocity associated with the current propagation step, and
 valuates the user-supplied g switching function lambda block within the scope of the handler
 context. This is how the lambda block gets access to objects such as <code>time</code>, <code>position</code>, and
 <code>velocity</code>.</p>
 
-<p>Finally, once the switching function converges on the event, the <code>event\_occurred</code> method is
+<p>Finally, once the switching function converges on the event, the <code>event_occurred</code> method is
 called which evaluates the user-supplied code block definition within the scope of the
-<code>event\_occurred\_context</code> object. If a user returns an enum type of <code>EventHandler::Action</code>, then
+<code>event_occurred_context</code> object. If a user returns an enum type of <code>EventHandler::Action</code>, then
 that action is returned to the propagator, otherwise the propagator will continue by default.</p>
 
 <p>``` ruby</p>
@@ -374,7 +374,7 @@ spurious evaluations of the g function once the event has occurred.</p>
 
 <p>As for <code>otherwise</code>, we use the same approach in evaluating both the user-supplied g switching
 function along with the user-supplied code block that gets evaluated during the call to
-<code>handle\_step</code>.</p>
+<code>handle_step</code>.</p>
 
 <h1>Wrapping things up</h1>
 
