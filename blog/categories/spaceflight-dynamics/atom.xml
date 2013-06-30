@@ -4,7 +4,7 @@
   <title><![CDATA[Category: spaceflight dynamics | Science I/O]]></title>
   <link href="http://slnovak.github.io/blog/categories/spaceflight-dynamics/atom.xml" rel="self"/>
   <link href="http://slnovak.github.io/"/>
-  <updated>2013-06-30T18:45:24-04:00</updated>
+  <updated>2013-06-30T18:49:53-04:00</updated>
   <id>http://slnovak.github.io/</id>
   <author>
     <name><![CDATA[Stefan Novak]]></name>
@@ -44,10 +44,13 @@ approach for describing discrete events during a spacecraft simulation.</p>
 
 <h1>TLDR;</h1>
 
-<p>1) JRuby can be used to create a user-friendly DSL for describing spacecraft propagation tasks.
-2) Apache Commons provides a solid API for interfacing with ODE solvers that we can use.
-3) Declarative programming can be used to maintain a flexible and scalable modeling environment.
-4) Take a look at the code sample: <a href="https://gist.github.com/slnovak/5897041">https://gist.github.com/slnovak/5897041</a></p>
+<ol>
+<li>JRuby can be used to create a user-friendly DSL for describing spacecraft propagation tasks.</li>
+<li>Apache Commons provides a solid API for interfacing with ODE solvers that we can use.</li>
+<li>Declarative programming can be used to maintain a flexible and scalable modeling environment.</li>
+<li>Take a look at the code sample: <a href="https://gist.github.com/slnovak/5897041">https://gist.github.com/slnovak/5897041</a></li>
+</ol>
+
 
 <h1>Apache Commons Math ++</h1>
 
@@ -384,13 +387,16 @@ developing ground systems. Once the core components of the library have been has
 (maneuvers, OD, etc) in conjunction with a clean DSL (that allows analysts and developers to
 design missions), a number of interesting applications can be potentially persued. For example:</p>
 
-<p>1) One could easily implement this framework within an application server for running analysis
-in a distributed and collaborativeenvironment. Think Google Docs + Dropbox + <a href="http://ipython.org/notebook.html">IPython Notebook</a>.
-2) The proposed DSL could be used for building out Storm topologies. Do you have tens of thousands
+<ol>
+<li>One could easily implement this framework within an application server for running analysis
+in a distributed and collaborativeenvironment. Think Google Docs + Dropbox + <a href="http://ipython.org/notebook.html">IPython Notebook</a>.</li>
+<li>The proposed DSL could be used for building out Storm topologies. Do you have tens of thousands
 of space objects that you need to process in a large distributed environment? You could have an
 analysts or engineer develop a simulation for filtering out objects of interest and
-automatically deploy to a Storm cluster.
-3) The same can be done for bulk data processing platforms such as Hadoop.</p>
+automatically deploy to a Storm cluster.</li>
+<li>The same can be done for bulk data processing platforms such as Hadoop.</li>
+</ol>
+
 
 <p>So, stay tuned for updates and <a href="https://twitter.com/datahipster">let me know</a> if you have any ideas!</p>
 ]]></content>
