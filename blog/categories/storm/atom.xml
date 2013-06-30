@@ -1,0 +1,399 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: storm | Science I/O]]></title>
+  <link href="http://slnovak.github.io/blog/categories/storm/atom.xml" rel="self"/>
+  <link href="http://slnovak.github.io/"/>
+  <updated>2013-06-30T18:45:24-04:00</updated>
+  <id>http://slnovak.github.io/</id>
+  <author>
+    <name><![CDATA[Stefan Novak]]></name>
+    <email><![CDATA[stefan@novak.io]]></email>
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Using JRuby for Flight Dynamics System Design]]></title>
+    <link href="http://slnovak.github.io/blog/2013/06/30/using-jruby-for-flight-dynamics-system-design/"/>
+    <updated>2013-06-30T13:04:00-04:00</updated>
+    <id>http://slnovak.github.io/blog/2013/06/30/using-jruby-for-flight-dynamics-system-design</id>
+    <content type="html"><![CDATA[<p>One of my recent side-project endeavors is to create an open-source library that takes
+advantage of pre-existing open-source technologies to build out a scalable spacecraft simulation
+framework that can be used to support the development of flight dynamics systems. Sure there are
+a <a href="http://ai-solutions.com/ProductsServices/FreeFlyer/Overview.aspx">variety</a>
+<a href="http://gmat.gsfc.nasa.gov">of</a> <a href="http://www.agi.com/default.aspx">solutions</a> out there, but
+like any other hacker out there, there has to be a better way to do things! :)</p>
+
+<p>So, yes. YAFDF: Yet Another Flight Dynamics Framework. Hear me out!</p>
+
+<p>Not only is the proposed framework intended to deploy across a variety of operational
+environments, such as the desktop, web, and big data, but it explores the notion of declarative
+programming for mission modeling. By building out a flexible domain-specific language
+(DSL), an analyst or systems engineer can develop a flight dynamics system without having to
+worry about the environment that simulation will be executing under. I&rsquo;ll be talking about this
+in future posts, so hang tight if it looks like a lot of hand-waving. However, if you&rsquo;re
+interested in this idea, I&rsquo;m trying to figure out what approaches/philosophies within
+<a href="https://camel.apache.org/enterprise-integration-patterns.html">enterprise integration patterns</a>
+can be translated over to flight dynamics for creating a robust toolset.</p>
+
+<p>But alas, I digress.</p>
+
+<p>This post covers the implementation of a simple propagation DSL that demonstrates an intuitive
+approach for describing discrete events during a spacecraft simulation.</p>
+
+<h1>TLDR;</h1>
+
+<p>1) JRuby can be used to create a user-friendly DSL for describing spacecraft propagation tasks.
+2) Apache Commons provides a solid API for interfacing with ODE solvers that we can use.
+3) Declarative programming can be used to maintain a flexible and scalable modeling environment.
+4) Take a look at the code sample: <a href="https://gist.github.com/slnovak/5897041">https://gist.github.com/slnovak/5897041</a></p>
+
+<h1>Apache Commons Math ++</h1>
+
+<p>Before we dive into the details, it&rsquo;s worth to point out how the
+<a href="http://commons.apache.org/proper/commons-math/">Apache Commons</a> math library contains a
+fantastic library for working with
+<a href="http://commons.apache.org/proper/commons-math/userguide/ode.html">ODE problems</a>. Specifically,
+the library has great support for working with discrete event handling which is core to a
+variety of flight dynamics modeling problems such as contact analysis, shadow analysis,
+maneuver modeling, close approach, etc. The goal of this exploration is to show how we can
+write a simple DSL that allows a user to describe a series of discrete events and manage them
+through Apache&rsquo;s ODE system.</p>
+
+<p>(However, the ODE library loses a point for the lack of a thread-safe integrator.)</p>
+
+<p>Let&rsquo;s dive into some code!</p>
+
+<h1>A glimspe at the final product</h1>
+
+<p>First, let&rsquo;s take a look at the DSL in action:</p>
+
+<p>``` ruby
+Propagator.new do</p>
+
+<p>  integrator DormandPrince853Integrator.new 1.0e-8, 60.0, 1.0e-10, 1.0e-10</p>
+
+<p>  force_model ForceModel::PointMass</p>
+
+<p>  propagation_duration 10.days</p>
+
+<p>  initial_state [-266.77,  3865.8, 5426.2, -6.4836, -3.6198, 2.4156]</p>
+
+<p>  at &ndash;>{ position.x &lt;=> 0 }, :recurring => true do |time, position, velocity|</p>
+
+<pre><code>puts "Crossing x=0"
+</code></pre>
+
+<p>  end</p>
+
+<p>  at &ndash;>{ time &lt;=> 1.day } do |time, position, velocity|</p>
+
+<pre><code>puts "One day out!"
+sleep 1
+</code></pre>
+
+<p>  end</p>
+
+<p>  at &ndash;>{ time &lt;=> 2.days } do |time, position, velocity|</p>
+
+<pre><code>puts "Two days out!"
+sleep 1
+</code></pre>
+
+<p>  end</p>
+
+<p>  at &ndash;>{ time &lt;=> 4.days } do |time, position, velocity|</p>
+
+<pre><code>puts 'Done!'
+stop
+</code></pre>
+
+<p>  end</p>
+
+<p>  otherwise do |time, position, velocity|</p>
+
+<pre><code>puts "#{time.from_now}, #{position.x}, #{position.y}, #{position.z}"
+</code></pre>
+
+<p>  end
+end
+```</p>
+
+<p>What we have here is an instance of the <code>Propagator</code> class that is used to configure a
+propagation loop for 10 days. However, note that we&rsquo;re not explicitly stepping the system,
+instead we&rsquo;re simply registering events at given times and locations within the orbit that we
+want to step to. By default, events are assumed to be one-time events which can be expressed by
+an increasing <a href="http://commons.apache.org/proper/commons-math/apidocs/org/apache/commons/math3/ode/events/EventHandler.html#g(double,%20double[]">g switching function</a>).
+Once this event occurs, the integrator no longer evaluates the corresponding g function, allowing for the
+propagator to continue along efficiently. However, if there is a stepping function that does
+repeat, a user can pass in the <code>:recurring =&gt; true</code> option. Keep in mind that the notation
+<code>-&gt;{...}</code> is simply a shorthand syntax for lambda functions in Ruby.</p>
+
+<p>When we run this code, we see something akin to that of an ephemeris that is generated with a
+few comments inserted. Note that when the main epoch reaches 3 days, the propagation loop is
+exited. A sample of the output is given by:</p>
+
+<p><code>
+  2013-06-30 13:52:34 -0400, -267.0962052731027, 3865.617872455735, 5426.3215254923125
+  2013-06-30 13:52:35 -0400, -270.3582078208608, 3863.795873476542, 5427.535764546597
+  2013-06-30 13:52:40 -0400, -302.9729896173911, 3845.5036641186334, 5439.576495221554
+  ...
+  Crossing x=0
+  2013-06-30 14:39:22 -0400, 2.5130310774557074e-06, -4178.001864443813, -5543.430099405723
+  2013-06-30 14:39:31 -0400, 56.63606310261059, -4146.836842636793, -5565.134667770601
+  2013-06-30 14:40:31 -0400, 430.04266016838403, -3931.033172109793, -5694.5289652116435
+  ...
+  One day out!
+  2013-07-01 13:53:31 -0400, -1142.4516356096847, -4718.194714710301, -4988.237252607888
+  2013-07-01 13:54:27 -0400, -799.3074806144718, -4573.840414601556, -5178.739404126098
+  2013-07-01 13:55:27 -0400, -427.7204351044192, -4400.072763499506, -5361.881902660392
+  ...
+  Done!
+</code></p>
+
+<h1>Diving into the code</h1>
+
+<p>We can see that the <code>Propagator</code> class is split into a few sections: the initialize method,
+setters, and event definitions.</p>
+
+<h2>The initialize method</h2>
+
+<p>``` ruby
+class Propagator
+  def initialize(&amp;block)</p>
+
+<pre><code># Evaluate the user-supplied code block for configuring the Propagator instance.
+self.instance_exec(&amp;block)
+
+# Create an anonymous class that implements the FirstOrderDifferentialEquations
+# interface.
+ode = Class.new do
+  include FirstOrderDifferentialEquations
+
+  # We need to pass in the force model within the constructor so that we can reference
+  # @force_model.compute_derivatives.
+  def initialize(force_model)
+    @force_model = force_model
+  end
+
+  def compute_derivatives(t, y, y_dot)
+    @force_model.compute_derivatives(t, y, y_dot)
+  end
+
+  def get_dimension; 6; end
+end.new(@force_model)
+
+@integrator.integrate(ode, @initial_time, @initial_state, @final_time, @initial_state)
+</code></pre>
+
+<p>  end
+```</p>
+
+<p>This is where the core logic of executing the propagation loop exists. When we define the
+propagation loop through the constructor (<code>Propagator.new do ... end</code>), we end up evaluating
+the user-supplied block within the scope of the instance of the new Propagator object. This allows
+us to access any helper/setter methods, such as <code>force\_model</code> and <code>integrator</code>.</p>
+
+<p>Once the user-supplied block is executed, which ultimately stores any configuration data that is needed to run
+the propagation loop, we create an anonymous class that implements the
+<a href="http://commons.apache.org/proper/commons-math/apidocs/org/apache/commons/math3/ode/FirstOrderDifferentialEquations.html">FirstOrderDifferentialEquations</a>
+interface. This is primarily to bind the <code>compute\_derivatives</code> method from the selected force
+model to the integrator. Note that we have to pass <code>Propagator</code>&rsquo;s <code>@force\_model</code> to the ODE
+anonymous class via the constructor.</p>
+
+<p>Finally, we call the <code>integrate</code> method on our integrator!</p>
+
+<h3>May the force (model) be with you</h3>
+
+<p>We&rsquo;ve seen how a <code>ForceModel</code> class is assigned to our propagator which contains a method to
+calculate the derivatives for the system. We can quickly implement a simple point-mass force model:</p>
+
+<p>``` ruby
+module ForceModel
+  class PointMass</p>
+
+<pre><code>def self.compute_derivatives(time, y, y_dot)
+  position = Vector3D.new(y[0..2])
+  velocity = Vector3D.new(y[3..5])
+
+  # Derivative for position
+  y_dot[0] = velocity.x
+  y_dot[1] = velocity.y
+  y_dot[2] = velocity.z
+
+  acceleration = position.scalar_multiply(-398600.0 / position.norm**3)
+
+  # Derivatives for velocity
+  y_dot[3] = acceleration.x
+  y_dot[4] = acceleration.y
+  y_dot[5] = acceleration.z
+end
+</code></pre>
+
+<p>  end
+end
+```</p>
+
+<h2>Setters</h2>
+
+<p>Next, we have a series of methods that are supplied to the user to set configuration options
+for the <code>Propagator</code> instance. The only point to note here is that we must cast our objects to
+Java primitives so that our calls into the Apache Math library are consistent.</p>
+
+<h2>Event definitions</h2>
+
+<p>Now comes the fun part! We now implement two methods to capture events: <code>at</code> and
+<code>otherwise</code>.</p>
+
+<p>``` ruby
+  # &hellip;
+  def at(event, options={}, &amp;block)</p>
+
+<pre><code>options = {:recurring =&gt; true}.merge(options)
+
+# Create a class that will store data for time/position/velocity that can be referenced
+# inside of the g switching function lambdas.
+event_handler_context = Class.new do
+  attr_accessor :time, :position, :velocity
+
+  def initialize(time, position, velocity)
+    @time = time
+    @position = position
+    @velocity = velocity
+  end
+end
+
+# Create a class that provides helper functions to EventHandler::Action enums.
+event_occurred_context = Class.new do
+  def stop
+    EventHandler::Action::STOP
+  end
+
+  def continue
+    EventHandler::Action::STOP
+  end
+
+  def reset_state
+    EventHandler::Action::RESET_STATE
+  end
+end
+# ...
+</code></pre>
+
+<p>```</p>
+
+<p>First we define a class that acts as an event handler context. This is used to expose default
+objects in the lambda function that is evaluated as the user-supplied g switching function. You
+can see these objects in action within our example, such as <code>at -&gt;{ time &lt;=&gt; 2.days }...</code>
+(where <code>&lt;=&gt;</code> is the &lsquo;comparable&rsquo; operator). The same is done for <code>event\_occurred\_context</code>,
+which exposes enum types that can be returned at the end of the user-supplied code block for
+an event to control the execution of the propagator.</p>
+
+<p>``` ruby</p>
+
+<pre><code># ...
+# Create an event handler that acts as a proxy for the code block provided by the user.
+event_handler = Class.new do
+  include EventHandler
+
+  # Initialize the event_handler with context and event data.
+  def initialize(event_handler_context, event_occurred_context, event, &amp;block)
+    @event_handler_context = event_handler_context
+    @event_occurred_context = event_occurred_context
+    @event = event
+    @block = block
+  end
+
+  def init(t0, y0, t); end
+
+  # Parse out position and velocity and attach them to the event_handler_state. Evaluate
+  # the g switching function within this context.
+  def g(t,y)
+    position = Vector3D.new(y[0..2])
+    velocity = Vector3D.new(y[3..5])
+    context = @event_handler_context.new(t,position, velocity)
+    context.instance_exec(&amp;@event)
+  end
+
+  def event_occurred(time, y, increasing)
+    position = Vector3D.new(y[0..2])
+    velocity = Vector3D.new(y[3..5])
+    context = @event_occurred_context.new
+    action = context.instance_exec(time, position, velocity, &amp;@block)
+    action.is_a?(EventHandler::Action) ? action : EventHandler::Action::CONTINUE
+  end
+
+  def reset_state(t, y)
+    EventHandler::Action::RESET_STATE
+  end
+end.new(event_handler_context, event_occurred_context, event, &amp;block)
+# ...
+</code></pre>
+
+<p>```</p>
+
+<p>Next we define an event handler, which implements the
+<a href="http://commons.apache.org/proper/commons-math/apidocs/org/apache/commons/math3/ode/events/class-use/EventHandler.html">EventHandler interface</a>.
+Note how the switching function, <code>g(t,y)</code> creates a new instance of the <code>event\_handler\_context</code>
+class, with the time, position, and velocity associated with the current propagation step, and
+valuates the user-supplied g switching function lambda block within the scope of the handler
+context. This is how the lambda block gets access to objects such as <code>time</code>, <code>position</code>, and
+<code>velocity</code>.</p>
+
+<p>Finally, once the switching function converges on the event, the <code>event\_occurred</code> method is
+called which evaluates the user-supplied code block definition within the scope of the
+<code>event\_occurred\_context</code> object. If a user returns an enum type of <code>EventHandler::Action</code>, then
+that action is returned to the propagator, otherwise the propagator will continue by default.</p>
+
+<p>``` ruby</p>
+
+<pre><code># ...
+solver = PegasusSolver.new
+
+# If we're not defining a recurring event, define an EventFilter to optimize search.
+if options[:recurring]
+  @integrator.add_event_handler(event_handler, 1, 0.0001, 100, solver)
+else
+  event_filter = EventFilter.new(event_handler, FilterType::TRIGGER_ONLY_INCREASING_EVENTS)
+  @integrator.add_event_handler(event_filter, 1, 0.0001, 100, solver)
+end
+</code></pre>
+
+<p>  end
+```</p>
+
+<p>Lastly, we diagnose with the event is a recurring event or not. If the user specified this is a
+recurring event in which case we&rsquo;ll want to evaluate the g function at each step, the event
+handler is registered with the integrator. Otherwise, if the event is a one-time event which
+uses an increasing g function, we create a new instance of an <code>EventFilter</code> which will prevent
+spurious evaluations of the g function once the event has occurred.</p>
+
+<p>As for <code>otherwise</code>, we use the same approach in evaluating both the user-supplied g switching
+function along with the user-supplied code block that gets evaluated during the call to
+<code>handle\_step</code>.</p>
+
+<h1>Wrapping things up</h1>
+
+<p>So &ndash; cool! Now that we have a little DSL for describing propagation loops, the big question is:
+now what?</p>
+
+<p>This is ultimately the first step in trying to create a flight dynamics library that provides
+both flexibility (via a scripting environment) and scalability (targeting the JVM) for
+developing ground systems. Once the core components of the library have been hashed out
+(maneuvers, OD, etc) in conjunction with a clean DSL (that allows analysts and developers to
+design missions), a number of interesting applications can be potentially persued. For example:</p>
+
+<p>1) One could easily implement this framework within an application server for running analysis
+in a distributed and collaborativeenvironment. Think Google Docs + Dropbox + <a href="http://ipython.org/notebook.html">IPython Notebook</a>.
+2) The proposed DSL could be used for building out Storm topologies. Do you have tens of thousands
+of space objects that you need to process in a large distributed environment? You could have an
+analysts or engineer develop a simulation for filtering out objects of interest and
+automatically deploy to a Storm cluster.
+3) The same can be done for bulk data processing platforms such as Hadoop.</p>
+
+<p>So, stay tuned for updates and <a href="https://twitter.com/datahipster">let me know</a> if you have any ideas!</p>
+]]></content>
+  </entry>
+  
+</feed>
