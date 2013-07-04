@@ -4,7 +4,7 @@
   <title><![CDATA[Category: JRuby | Science I/O]]></title>
   <link href="http://stefan.novak.io/blog/categories/jruby/atom.xml" rel="self"/>
   <link href="http://stefan.novak.io/"/>
-  <updated>2013-06-30T18:58:59-04:00</updated>
+  <updated>2013-07-04T13:03:49-04:00</updated>
   <id>http://stefan.novak.io/</id>
   <author>
     <name><![CDATA[Stefan Novak]]></name>
@@ -42,7 +42,7 @@ can be translated over to flight dynamics for creating a robust toolset.</p>
 <p>This post covers the implementation of a simple propagation DSL that demonstrates an intuitive
 approach for describing discrete events during a spacecraft simulation.</p>
 
-<h1>TLDR;</h1>
+<h1>TL;DR</h1>
 
 <ol>
 <li>JRuby can be used to create a user-friendly DSL for describing spacecraft propagation tasks.</li>
@@ -68,7 +68,7 @@ through Apache&rsquo;s ODE system.</p>
 
 <p>Let&rsquo;s dive into some code!</p>
 
-<h1>A glimspe at the final product</h1>
+<h1>A glimpse at the final product</h1>
 
 <p>First, let&rsquo;s take a look at the DSL in action:</p>
 
@@ -385,11 +385,11 @@ now what?</p>
 both flexibility (via a scripting environment) and scalability (targeting the JVM) for
 developing ground systems. Once the core components of the library have been hashed out
 (maneuvers, OD, etc) in conjunction with a clean DSL (that allows analysts and developers to
-design missions), a number of interesting applications can be potentially persued. For example:</p>
+design missions), a number of interesting applications can be potentially pursued. For example:</p>
 
 <ol>
 <li>One could easily implement this framework within an application server for running analysis
-in a distributed and collaborativeenvironment. Think Google Docs + Dropbox + <a href="http://ipython.org/notebook.html">IPython Notebook</a>.</li>
+in a distributed and collaborative environment. Think Google Docs + Dropbox + <a href="http://ipython.org/notebook.html">IPython Notebook</a>.</li>
 <li>The proposed DSL could be used for building out Storm topologies. Do you have tens of thousands
 of space objects that you need to process in a large distributed environment? You could have an
 analysts or engineer develop a simulation for filtering out objects of interest and
